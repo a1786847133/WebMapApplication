@@ -2,13 +2,12 @@ mapboxgl.accessToken = 'pk.eyJ1IjoianN1MyIsImEiOiJjbWhlZW45ZTcwZGR4Mm1wd2FoNmc1e
 
 const mode = document.body.dataset.map; // "rates" or "cases"
 
-// --- common map init ---
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/dark-v10',
-  center: [-98, 39],   // U.S. view
+  center: [-98, 39],
   zoom: 3.2,
-  projection: { name: 'albers' } // required by your deliverable
+  projection: { name: 'albers' } // required by lab
 });
 
 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -20,22 +19,19 @@ map.on('load', () => {
 
 // ---------------------------
 // Map 1: Choropleth (rates)
+// Your file has property: "rates" (plural)
 // ---------------------------
 function initRatesMap() {
   map.addSource('covid-rates', {
     type: 'geojson',
-    data: 'assets/us-covid-2020-rates.geojson'
+    data: 'assets/us-covid-2020-rates.json'
   });
 
-  // You MUST match the property name in your geojson.
-  // Common possibilities: "rate", "cases_per_1000", etc.
-  const rateField = 'rate';
+  const rateField = 'rates'; // IMPORTANT: your data uses "rates"
 
-  // Choose breaks that make sense for your data (edit these after you inspect values)
-  const breaks = [0, 10, 25, 50, 75, 100, 150]; // per 1,000 residents (example)
-  const colors = [
-    '#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'
-  ];
+  // You can adjust breaks later if you want
+  const breaks = [0, 10, 25, 50, 75, 100, 150];
+  const colors = ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'];
 
   const fillColor = [
     'step',
@@ -69,21 +65,22 @@ function initRatesMap() {
     }
   });
 
-  // Interactivity: click county -> popup
   map.on('click', 'rates-fill', (e) => {
-    const f = e.features[0];
-    const props = f.properties;
+    const p = e.features[0].properties;
 
-    // These field names vary a lot — update after you open geojson once.
-    const name = props.county || props.NAME || props.County || 'County';
-    const state = props.state || props.STATE || props.State || '';
-    const rateVal = props[rateField];
+    const county = p.county ?? 'Unknown';
+    const state = p.state ?? '';
+    const rateVal = Number(p[rateField]);
+    const casesVal = Number(p.cases);
+    const deathsVal = Number(p.deaths);
 
     new mapboxgl.Popup()
       .setLngLat(e.lngLat)
       .setHTML(`
-        <strong>${name}${state ? ', ' + state : ''}</strong><br/>
-        <strong>Rate (per 1,000):</strong> ${Number(rateVal).toFixed(1)}
+        <strong>${county}${state ? ', ' + state : ''}</strong><br/>
+        <strong>Rate (per 1,000):</strong> ${Number.isFinite(rateVal) ? rateVal.toFixed(3) : 'N/A'}<br/>
+        <strong>Cases:</strong> ${Number.isFinite(casesVal) ? casesVal.toLocaleString() : 'N/A'}<br/>
+        <strong>Deaths:</strong> ${Number.isFinite(deathsVal) ? deathsVal.toLocaleString() : 'N/A'}
       `)
       .addTo(map);
   });
@@ -91,15 +88,13 @@ function initRatesMap() {
   map.on('mouseenter', 'rates-fill', () => (map.getCanvas().style.cursor = 'pointer'));
   map.on('mouseleave', 'rates-fill', () => (map.getCanvas().style.cursor = ''));
 
-  buildChoroplethLegend('Case rate (per 1,000)', breaks, colors, 'Source: NYT + ACS (2018) + Census');
+  buildChoroplethLegend('Case rate (per 1,000)', breaks, colors);
 }
 
-// Legend for choropleth
-function buildChoroplethLegend(title, breaks, colors, sourceText) {
+function buildChoroplethLegend(title, breaks, colors) {
   const legend = document.getElementById('legend');
   let html = `<div class="legend-title">${title}</div>`;
 
-  // build ranges like "0–10", "10–25", ..., "150+"
   for (let i = 0; i < colors.length; i++) {
     let label;
     if (i === 0) label = `${breaks[0]}–${breaks[1]}`;
@@ -114,23 +109,28 @@ function buildChoroplethLegend(title, breaks, colors, sourceText) {
     `;
   }
 
-  html += `<div style="margin-top:10px; font-size:10pt; text-align:right;">${sourceText}</div>`;
+  html += `
+    <div style="margin-top:10px; font-size:10pt; text-align:right;">
+      Source: NYT (cases) + ACS 2018 (pop) + Census (counties)
+    </div>
+  `;
+
   legend.innerHTML = html;
 }
 
 // -------------------------------------
 // Map 2: Proportional symbols (cases)
+// Your file has property: "cases"
 // -------------------------------------
 function initCasesMap() {
   map.addSource('covid-counts', {
     type: 'geojson',
-    data: 'assets/us-covid-2020-counts.geojson'
+    data: 'assets/us-covid-2020-counts.json'
   });
 
-  // MUST match your geojson property
   const casesField = 'cases';
 
-  // Circle radius: use sqrt so very large counties don’t dominate
+  // sqrt scaling keeps big counties from overwhelming the map
   const circleRadius = [
     'interpolate', ['linear'],
     ['sqrt', ['to-number', ['get', casesField]]],
@@ -156,18 +156,19 @@ function initCasesMap() {
   });
 
   map.on('click', 'cases-circles', (e) => {
-    const f = e.features[0];
-    const props = f.properties;
+    const p = e.features[0].properties;
 
-    const name = props.county || props.NAME || props.County || 'County';
-    const state = props.state || props.STATE || props.State || '';
-    const casesVal = props[casesField];
+    const county = p.county ?? 'Unknown';
+    const state = p.state ?? '';
+    const casesVal = Number(p[casesField]);
+    const deathsVal = Number(p.deaths);
 
     new mapboxgl.Popup()
       .setLngLat(e.lngLat)
       .setHTML(`
-        <strong>${name}${state ? ', ' + state : ''}</strong><br/>
-        <strong>Total cases (2020):</strong> ${Number(casesVal).toLocaleString()}
+        <strong>${county}${state ? ', ' + state : ''}</strong><br/>
+        <strong>Total cases (2020):</strong> ${Number.isFinite(casesVal) ? casesVal.toLocaleString() : 'N/A'}<br/>
+        <strong>Total deaths (2020):</strong> ${Number.isFinite(deathsVal) ? deathsVal.toLocaleString() : 'N/A'}
       `)
       .addTo(map);
   });
@@ -175,17 +176,10 @@ function initCasesMap() {
   map.on('mouseenter', 'cases-circles', () => (map.getCanvas().style.cursor = 'pointer'));
   map.on('mouseleave', 'cases-circles', () => (map.getCanvas().style.cursor = ''));
 
-  buildCircleLegend(
-    'Total cases',
-    [1000, 10000, 50000],        // edit to match your data scale
-    [6, 14, 26],                 // legend circle sizes (manual like your earthquake example)
-    'rgb(255,120,80)',
-    'Source: NYT + Census'
-  );
+  buildCircleLegend('Total cases (2020)', [1000, 10000, 50000], [8, 18, 30], 'rgb(255,120,80)');
 }
 
-// Legend for proportional symbols
-function buildCircleLegend(title, values, sizes, color, sourceText) {
+function buildCircleLegend(title, values, sizes, color) {
   const legend = document.getElementById('legend');
   let labels = [`<div class="legend-title">${title}</div>`];
 
@@ -199,6 +193,11 @@ function buildCircleLegend(title, values, sizes, color, sourceText) {
     );
   }
 
-  labels.push(`<div style="margin-top:10px; font-size:10pt; text-align:right;">${sourceText}</div>`);
+  labels.push(`
+    <div style="margin-top:10px; font-size:10pt; text-align:right;">
+      Source: NYT (cases/deaths)
+    </div>
+  `);
+
   legend.innerHTML = labels.join('');
 }
