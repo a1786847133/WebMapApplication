@@ -1,10 +1,10 @@
 # COVID-19 County Maps (U.S., 2020)
 
-Hi! This project is my Lab 03 deliverable for GEOG 458. I built two interactive web maps that visualize COVID-19 patterns across U.S. counties in 2020. One map focuses on **case rates** (cases per 1,000 residents) using a **choropleth**, and the other shows **total case counts** using **proportional symbols**.
+Hi! This project is my Lab 03 deliverable for GEOG 458. I built two interactive web maps that visualize COVID-19 patterns across U.S. counties in 2020. One map focuses on **case rates** using a **choropleth**, and the other shows **total case counts** using **proportional symbols**.
 
 ## Live Maps
 - **Map 1 (Choropleth — Case Rates):** https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPOSITORY_NAME/map1.html  
-- **Map 2 (Proportional Symbols — Total Cases):** https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPOSITORY_NAME/map2.html  
+- **Map 2 (Proportional Symbols — Total Cases):** https://a1786847133.github.io/WebMapApplication/map2.html
 
 ## Screenshots
 (Add your screenshots to the `img/` folder and update the filenames below.)
