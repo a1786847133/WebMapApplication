@@ -1,13 +1,13 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoianN1MyIsImEiOiJjbWhlZW45ZTcwZGR4Mm1wd2FoNmc1eGx4In0.1uDkRhqn0WIQeUtnhvLPOA';
 
-const mode = document.body.dataset.map; // "rates" or "cases"
+const mode = document.body.dataset.map;
 
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/dark-v10',
   center: [-98, 39],
   zoom: 3.2,
-  projection: { name: 'albers' } // required by lab
+  projection: { name: 'albers' } 
 });
 
 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -17,19 +17,14 @@ map.on('load', () => {
   if (mode === 'cases') initCasesMap();
 });
 
-// ---------------------------
-// Map 1: Choropleth (rates)
-// Your file has property: "rates" (plural)
-// ---------------------------
 function initRatesMap() {
   map.addSource('covid-rates', {
     type: 'geojson',
     data: 'assets/us-covid-2020-rates.json'
   });
 
-  const rateField = 'rates'; // IMPORTANT: your data uses "rates"
+  const rateField = 'rates'; 
 
-  // You can adjust breaks later if you want
   const breaks = [0, 10, 25, 50, 75, 100, 150];
   const colors = ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'];
 
@@ -118,10 +113,7 @@ function buildChoroplethLegend(title, breaks, colors) {
   legend.innerHTML = html;
 }
 
-// -------------------------------------
-// Map 2: Proportional symbols (cases)
-// Your file has property: "cases"
-// -------------------------------------
+
 function initCasesMap() {
   map.addSource('covid-counts', {
     type: 'geojson',
@@ -130,7 +122,6 @@ function initCasesMap() {
 
   const casesField = 'cases';
 
-  // sqrt scaling keeps big counties from overwhelming the map
   const circleRadius = [
     'interpolate', ['linear'],
     ['sqrt', ['to-number', ['get', casesField]]],
