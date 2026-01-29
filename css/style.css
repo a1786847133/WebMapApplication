@@ -11,7 +11,6 @@ body {
   width: 100%;
 }
 
-/* titles */
 #title {
   position: absolute;
   top: 0;
@@ -32,7 +31,6 @@ body {
   color: white;
 }
 
-/* legend panel */
 #legend {
   position: absolute;
   bottom: 0;
@@ -52,7 +50,6 @@ body {
   margin: 0 0 8px 0;
 }
 
-/* choropleth rows */
 .legend-row {
   display: flex;
   align-items: center;
@@ -65,7 +62,6 @@ body {
   border: 1px solid rgba(0,0,0,0.2);
 }
 
-/* proportional symbol legend rows */
 .break {
   position: relative;
   margin: 0;
